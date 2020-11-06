@@ -33,7 +33,7 @@ class RxSwiftViewController: UIViewController {
         imageView.image = nil
 
         _ = rxswiftLoadImage(from: LARGER_IMAGE_URL)
-            .observeOn(MainScheduler.instance)
+            .observeOn(MainScheduler.instance) // MainScheduler == DispatchQueue.main
             .subscribe({ result in
                 switch result {
                 case let .next(image):
