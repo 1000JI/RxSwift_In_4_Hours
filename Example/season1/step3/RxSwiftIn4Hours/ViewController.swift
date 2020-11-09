@@ -15,7 +15,8 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        bindUI()
+        bindInput()
+        bindOutput()
     }
 
     // MARK: - IBOutler
@@ -27,13 +28,61 @@ class ViewController: UIViewController {
     @IBOutlet var pwValidView: UIView!
 
     // MARK: - Bind UI
+    
+    let idInputText: BehaviorSubject<String> = BehaviorSubject(value: "")
+    let idValid: BehaviorSubject<Bool> = BehaviorSubject(value: false)
+    
+    let pwInputText: BehaviorSubject<String> = BehaviorSubject(value: "")
+    let pwValid: BehaviorSubject<Bool> = BehaviorSubject(value: false)
+    
+    /*
+     Subject => BehaviorSubject
+     - value: Default Value
+     - BehaviorSubject는 Observable하는데, 데이터를 가지고 있음
+     - 데이터를 넣을 수도 있고 Subscribe도 할 수 있음
+     - Subscribe을 했을 때 가장 최근에 가지고 있던 값을 받을 수 있음
+     */
 
-    private func bindUI() {
+    private func bindInput() {
         // id input +--> check valid --> bullet
         //          |
         //          +--> button enable
         //          |
         // pw input +--> check valid --> bullet
+        
+        // [ input: 아이디 입력, 비번 입력 ]
+        idField.rx.text.orEmpty
+            .bind(to: idInputText)
+            .disposed(by: disposeBag)
+        
+        idInputText
+            .map(checkEmailValid(_:))
+            .bind(to: idValid)
+            .disposed(by: disposeBag)
+        
+        pwField.rx.text.orEmpty
+            .bind(to: pwInputText)
+            .disposed(by: disposeBag)
+        
+        pwInputText
+            .map(checkPasswordValid(_:))
+            .bind(to: pwValid)
+            .disposed(by: disposeBag)
+    }
+    
+    private func bindOutput() {
+        // [ output: bullet view, login button enabled ]
+        idValid
+            .subscribe(onNext: { boolean in self.idValidView.isHidden = boolean })
+            .disposed(by: disposeBag)
+
+        pwValid
+            .subscribe(onNext: { boolean in self.pwValidView.isHidden = boolean })
+            .disposed(by: disposeBag)
+        
+        Observable.combineLatest(idValid, pwValid, resultSelector: { $0 && $1 })
+            .subscribe(onNext: { boolean in self.loginButton.isEnabled = boolean })
+            .disposed(by: disposeBag)
     }
 
     // MARK: - Logic
