@@ -28,13 +28,16 @@ class RxSwiftViewController: UIViewController {
     @IBOutlet var countLabel: UILabel!
 
     // MARK: - IBAction
+    
+//    var disposable: Disposable?
+    var disposeBag: DisposeBag = DisposeBag()
 
     @IBAction func onLoadImage(_ sender: Any) {
         imageView.image = nil
 
-        _ = rxswiftLoadImage(from: LARGER_IMAGE_URL)
+        let disposable = rxswiftLoadImage(from: LARGER_IMAGE_URL)
             .observeOn(MainScheduler.instance) // MainScheduler == DispatchQueue.main
-            .subscribe({ result in
+            .subscribe({ result in  // Disposable
                 switch result {
                 case let .next(image):
                     self.imageView.image = image
@@ -46,10 +49,14 @@ class RxSwiftViewController: UIViewController {
                     break
                 }
             })
+//        disposeBag.insert(disposable)     // bag에 넣는 1번째 방법
+        disposable.disposed(by: disposeBag) // bag에 넣는 2번째 방법
     }
 
     @IBAction func onCancel(_ sender: Any) {
         // TODO: cancel image loading
+//        disposable?.dispose()
+        disposeBag = DisposeBag() // dispose 해줌
     }
 
     // MARK: - RxSwift
