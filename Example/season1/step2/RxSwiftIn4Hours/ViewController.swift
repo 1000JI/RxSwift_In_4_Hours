@@ -21,8 +21,8 @@ class ViewController: UITableViewController {
 
     @IBAction func exJust1() {
         Observable.just("Hello World")
-            .subscribe(onNext: { str in
-                print(str)
+            .subscribe(onNext: { str in // str == "Hello World"
+                print(str) // "Hello World"
             })
             .disposed(by: disposeBag)
     }
@@ -30,24 +30,35 @@ class ViewController: UITableViewController {
     @IBAction func exJust2() {
         Observable.just(["Hello", "World"])
             .subscribe(onNext: { arr in
-                print(arr)
+                print(arr) // "Hello", "World"
             })
             .disposed(by: disposeBag)
     }
+    
+    /*
+     from
+     
+     */
 
     @IBAction func exFrom1() {
         Observable.from(["RxSwift", "In", "4", "Hours"])
             .subscribe(onNext: { str in
                 print(str)
+                /*
+                 RxSwift
+                 In
+                 4
+                 Hours
+                 */
             })
             .disposed(by: disposeBag)
     }
 
     @IBAction func exMap1() {
-        Observable.just("Hello")
+        Observable.just("Hello") // "Hello" 그대로 내려가기 때문에
             .map { str in "\(str) RxSwift" }
             .subscribe(onNext: { str in
-                print(str)
+                print(str) // "Hello RxSwift"
             })
             .disposed(by: disposeBag)
     }
@@ -57,6 +68,10 @@ class ViewController: UITableViewController {
             .map { $0.count }
             .subscribe(onNext: { str in
                 print(str)
+                /*
+                 4
+                 3
+                 */
             })
             .disposed(by: disposeBag)
     }
@@ -72,11 +87,11 @@ class ViewController: UITableViewController {
 
     @IBAction func exMap3() {
         Observable.just("800x600")
-            .map { $0.replacingOccurrences(of: "x", with: "/") }
-            .map { "https://picsum.photos/\($0)/?random" }
-            .map { URL(string: $0) }
-            .filter { $0 != nil }
-            .map { $0! }
+            .map { $0.replacingOccurrences(of: "x", with: "/") } // "800/600"
+            .map { "https://picsum.photos/\($0)/?random" } // "https://picsum.photos/800/600/?random"
+            .map { URL(string: $0) } // URL
+            .filter { $0 != nil } // nil인지 Check
+            .map { $0! } // 강제 언래핑
             .map { try Data(contentsOf: $0) }
             .map { UIImage(data: $0) }
             .subscribe(onNext: { image in
