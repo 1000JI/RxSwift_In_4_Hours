@@ -111,20 +111,32 @@ class ViewController: UIViewController {
         setVisibleWithAnimation(activityIndicator, true)
         
         // 2. Observable로 오는 데이터를 받아서 처리하는 방법
-        downloadJson(MEMBER_LIST_URL)
-            .debug() // 어떤 데이터가 전달되는지 확인 할 수 있음
+        _ = downloadJson(MEMBER_LIST_URL)
             .subscribe { event in
                 switch event {
                 case .next(let json):
-                    DispatchQueue.main.async {
-                        self.editView.text = json
-                        self.setVisibleWithAnimation(self.activityIndicator, false)
-                    }
-                case .error(let error):
-                    print("DEBUG: Error, ", error.localizedDescription)
+                    break
+                case .error(let err):
+                    break
                 case .completed:
-                    print("Completed.")
+                    break
                 }
-            }
+        }
+        
+//        downloadJson(MEMBER_LIST_URL)
+//            .debug() // 어떤 데이터가 전달되는지 확인 할 수 있음
+//            .subscribe { event in
+//                switch event {
+//                case .next(let json):
+//                    DispatchQueue.main.async {
+//                        self.editView.text = json
+//                        self.setVisibleWithAnimation(self.activityIndicator, false)
+//                    }
+//                case .error(let error):
+//                    print("DEBUG: Error, ", error.localizedDescription)
+//                case .completed:
+//                    print("Completed.")
+//                }
+//            }
     }
 }
