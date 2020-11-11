@@ -6,6 +6,10 @@
 //  Copyright © 2019 iamchiwon. All rights reserved.
 //
 
+/*
+ 
+ */
+
 import RxSwift
 import SwiftyJSON
 import UIKit
@@ -31,6 +35,17 @@ class ViewController: UIViewController {
             self?.view.layoutIfNeeded()
         })
     }
+    
+    func downloadJson(_ url: String, completion: @escaping(String?) -> Void) {
+        DispatchQueue.global().async {
+            let url = URL(string: url)!
+            let data = try! Data(contentsOf: url)
+            let json = String(data: data, encoding: .utf8)
+            DispatchQueue.main.async {
+                completion(json)
+            }
+        }
+    }
 
     // MARK: SYNC
 
@@ -39,12 +54,10 @@ class ViewController: UIViewController {
     @IBAction func onLoad() {
         editView.text = ""
         setVisibleWithAnimation(activityIndicator, true)
-
-        let url = URL(string: MEMBER_LIST_URL)!
-        let data = try! Data(contentsOf: url)
-        let json = String(data: data, encoding: .utf8)
-        self.editView.text = json
         
-        self.setVisibleWithAnimation(self.activityIndicator, false)
+        downloadJson(MEMBER_LIST_URL) { json in
+            self.editView.text = json
+            self.setVisibleWithAnimation(self.activityIndicator, false)
+        }
     }
 }
