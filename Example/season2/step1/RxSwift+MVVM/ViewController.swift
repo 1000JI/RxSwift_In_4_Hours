@@ -7,7 +7,11 @@
 //
 
 /*
- 
+ PromiseKit
+ Bolt
+ RxSwift
+    - Observable: 나중에 생기면
+    - subscribe: 나중에 오면
  */
 
 import RxSwift
@@ -15,6 +19,19 @@ import SwiftyJSON
 import UIKit
 
 let MEMBER_LIST_URL = "https://my.api.mockaroo.com/members_with_avatar.json?key=44ce18f0"
+
+//// RxSwift
+//class Observable<T> {
+//    private let task: (@escaping (T) -> Void) -> Void
+//
+//    init(task: @escaping (@escaping (T) -> Void) -> Void) {
+//        self.task = task
+//    }
+//
+//    func subscribe(_ f: @escaping (T) -> Void) {
+//        task(f)
+//    }
+//}
 
 class ViewController: UIViewController {
     @IBOutlet var timerLabel: UILabel!
@@ -36,14 +53,20 @@ class ViewController: UIViewController {
         })
     }
     
-    func downloadJson(_ url: String, completion: @escaping(String?) -> Void) {
-        DispatchQueue.global().async {
-            let url = URL(string: url)!
-            let data = try! Data(contentsOf: url)
-            let json = String(data: data, encoding: .utf8)
-            DispatchQueue.main.async {
-                completion(json)
+    func downloadJson(_ url: String) -> Observable<String?> {
+        // 1. 비동기로 생기는 데이터를 Observable로 감싸서 리턴하는 방법
+        return Observable.create { f in
+            DispatchQueue.global().async {
+                let url = URL(string: url)!
+                let data = try! Data(contentsOf: url)
+                let json = String(data: data, encoding: .utf8)
+                
+                DispatchQueue.main.async {
+                    f.onNext(json)
+                    f.onCompleted() // Memory Leak Remove(?)
+                }
             }
+            return Disposables.create()
         }
     }
 
@@ -55,9 +78,18 @@ class ViewController: UIViewController {
         editView.text = ""
         setVisibleWithAnimation(activityIndicator, true)
         
-        downloadJson(MEMBER_LIST_URL) { json in
-            self.editView.text = json
-            self.setVisibleWithAnimation(self.activityIndicator, false)
-        }
+        // 2. Observable로 오는 데이터를 받아서 처리하는 방법
+        downloadJson(MEMBER_LIST_URL)
+            .subscribe { event in
+                switch event {
+                case .next(let json):
+                    self.editView.text = json
+                    self.setVisibleWithAnimation(self.activityIndicator, false)
+                case .error(let error):
+                    print("DEBUG: Error, ", error.localizedDescription)
+                case .completed:
+                    print("Completed.")
+                }
+            }
     }
 }
