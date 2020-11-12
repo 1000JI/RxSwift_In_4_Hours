@@ -10,16 +10,41 @@ import Foundation
 import RxSwift
 
 class MenuListViewModel {
-    var menus: [Menu] = [
-        Menu(name: "테스트1", price: 100, count: 0),
-        Menu(name: "테스트2", price: 100, count: 0),
-        Menu(name: "테스트3", price: 100, count: 0),
-        Menu(name: "테스트4", price: 100, count: 0),
-        Menu(name: "테스트5", price: 100, count: 0)
-    ]
+//    var menuObservable = PublishSubject<[Menu]>()
+    var menuObservable = BehaviorSubject<[Menu]>(value: [])
     
-    var itemsCount: Int = 5
-    var totalPrice: PublishSubject<Int> = PublishSubject()
+    lazy var itemsCount = menuObservable.map {
+        $0.map { $0.count }.reduce(0, +)
+    }
+    
+    lazy var totalPrice = menuObservable.map {
+        $0.map { $0.price * $0.count }.reduce(0, +)
+    }
+    
+    init() {
+        let menus: [Menu] = [
+            Menu(name: "테스트1", price: 100, count: 0),
+            Menu(name: "테스트2", price: 100, count: 0),
+            Menu(name: "테스트3", price: 100, count: 0),
+            Menu(name: "테스트4", price: 100, count: 0),
+            Menu(name: "테스트5", price: 100, count: 0)
+        ]
+        
+        menuObservable.onNext(menus)
+    }
+    
+    func clearAllItemSelections() {
+        _ = menuObservable
+            .map { menus in
+                return menus.map { m in
+                    Menu(name: m.name, price: m.price, count: 0)
+                }
+            }
+            .take(1)
+            .subscribe(onNext: {
+                self.menuObservable.onNext($0)
+            })
+    }
 }
 
 /*
@@ -27,4 +52,6 @@ class MenuListViewModel {
  값을 컨트롤 할 순 없을까? 했던 것이 Subject이다.
  
  Subject => Obervable 밖에서 컨트롤 할 수 있게 해주는 것
+ 
+ 연결 관계를 Stream 이라고 한다.
  */

@@ -13,17 +13,37 @@ import RxCocoa
 class MenuViewController: UIViewController {
     // MARK: - Life Cycle
     
+    let cellID = "MenuItemTableViewCell"
+    
     let viewModel = MenuListViewModel()
     var disposeBag = DisposeBag()
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        viewModel.menuObservable
+            .observeOn(MainScheduler.instance)
+            .bind(to: tableView.rx
+                    .items(cellIdentifier: cellID, cellType: MenuItemTableViewCell.self)) { index, item, cell in
+                cell.title.text = item.name
+                cell.price.text = "\(item.price)"
+                cell.count.text = "\(item.count)"
+            }
+            .disposed(by: disposeBag)
+        
+        viewModel.itemsCount
+            .map { "\($0)" }
+            .observeOn(MainScheduler.instance)
+            .bind(to: itemCountLabel.rx.text) // RxCocoa, 순환 참조 없이 사용 가능
+            .disposed(by: disposeBag)
+        
         viewModel.totalPrice
-            .scan(0, accumulator: +) // 초기 값은 0이며 새로 들어온 값이랑 더해서 내려보낼 때 사용
             .map { $0.currencyKR() }
-            .subscribe(onNext: {
-                self.totalPrice.text = $0
-            })
+//            .subscribe(onNext: { [weak self] in
+//                self?.totalPrice.text = $0
+//            })
+            .observeOn(MainScheduler.instance)
+            .bind(to: totalPrice.rx.text)
             .disposed(by: disposeBag)
     }
 
@@ -49,30 +69,26 @@ class MenuViewController: UIViewController {
     @IBOutlet var totalPrice: UILabel!
 
     @IBAction func onClear() {
+        viewModel.clearAllItemSelections()
     }
 
     @IBAction func onOrder(_ sender: UIButton) {
         // TODO: no selection
         // showAlert("Order Fail", "No Orders")
 //        performSegue(withIdentifier: "OrderViewController", sender: nil)
-        
-        viewModel.totalPrice.onNext(100)
     }
 }
 
-extension MenuViewController: UITableViewDataSource {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return viewModel.menus.count
-    }
-
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "MenuItemTableViewCell") as! MenuItemTableViewCell
-
-        let menu = viewModel.menus[indexPath.row]
-        cell.title.text = menu.name
-        cell.price.text = "\(menu.price)"
-        cell.count.text = "\(menu.count)"
-
-        return cell
-    }
-}
+//extension MenuViewController: UITableViewDataSource {
+//    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+//        return viewModel.menuObservable
+//    }
+//
+//    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+//        let cell = tableView.dequeueReusableCell(withIdentifier: "MenuItemTableViewCell") as! MenuItemTableViewCell
+//
+//        let menu = viewModel.menus[indexPath.row]
+//
+//        return cell
+//    }
+//}
