@@ -8,10 +8,18 @@
 
 import Foundation
 import RxSwift
+import RxRelay
+
+/*
+ Subject 에러가 발생하더라도 끊어지지 않는 Subject가 필요하다.
+ UI가 연결되어 있기 때문에 Stream이 끊어지면 UI에 영향이 간다.
+ 따라서 RxRelay가 필요해졌다. 에러가 발생해도 끊어지지 않음.
+ */
 
 class MenuListViewModel {
 //    var menuObservable = PublishSubject<[Menu]>()
-    var menuObservable = BehaviorSubject<[Menu]>(value: [])
+//    var menuObservable = BehaviorSubject<[Menu]>(value: [])
+    var menuObservable = BehaviorRelay<[Menu]>(value: [])
     
     lazy var itemsCount = menuObservable.map {
         $0.map { $0.count }.reduce(0, +)
@@ -57,7 +65,8 @@ class MenuListViewModel {
             }
             .take(1)
             .subscribe(onNext: {
-                self.menuObservable.onNext($0)
+//                self.menuObservable.onNext($0)
+                self.menuObservable.accept($0)
             })
     }
     
@@ -80,7 +89,8 @@ class MenuListViewModel {
             }
             .take(1)
             .subscribe(onNext: {
-                self.menuObservable.onNext($0)
+//                self.menuObservable.onNext($0)
+                self.menuObservable.accept($0)
             })
     }
 }
