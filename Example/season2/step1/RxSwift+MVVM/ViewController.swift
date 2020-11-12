@@ -6,14 +6,6 @@
 //  Copyright © 2019 iamchiwon. All rights reserved.
 //
 
-/*
- PromiseKit
- Bolt
- RxSwift
-    - Observable: 나중에 생기면
-    - subscribe: 나중에 오면
- */
-
 import RxSwift
 import SwiftyJSON
 import UIKit
@@ -54,50 +46,12 @@ class ViewController: UIViewController {
     }
     
     func downloadJson(_ url: String) -> Observable<String?> {
-        // 1. 비동기로 생기는 데이터를 Observable로 감싸서 리턴하는 방법
-        return Observable.create() { emitter in
-            let url = URL(string: url)!
-            let task = URLSession.shared.dataTask(with: url) { (data, _, err) in
-                guard err == nil else {
-                    emitter.onError(err!)
-                    return
-                }
-                
-                if let dat = data, let json = String(data: dat, encoding: .utf8) {
-                    emitter.onNext(json)
-                }
-                
-                emitter.onCompleted() // 데이터가 끝났다고 알림
-                /*
-                 Observable의 생명주기
-                 1. Create
-                 2. subscribe
-                 3. onNext
-                 ---[ End ]---
-                 4. onCompleted / onError
-                 5. Disposed
-                 */
-            }
-            
-            task.resume()
-            
-            return Disposables.create() {
-                // dispose() 했을 경우 실행 되는 부분
-                task.cancel()
-            } // Disposable을 Return 해줘야 함
-        }
+        return Observable.just("Hello World") // 1: "Hello World"
+//        return Observable.from(["Hello", "World"]) // 1: "Hello", 2: "World"
         
-//        return Observable.create { f in
-//            DispatchQueue.global().async {
-//                let url = URL(string: url)!
-//                let data = try! Data(contentsOf: url)
-//                let json = String(data: data, encoding: .utf8)
-//
-//                DispatchQueue.main.async {
-//                    f.onNext(json)
-//                    f.onCompleted() // Memory Leak Remove(?)
-//                }
-//            }
+//        return Observable.create() { emitter in
+//            emitter.onNext("Hello World")
+//            emitter.onCompleted()
 //            return Disposables.create()
 //        }
     }
@@ -112,31 +66,19 @@ class ViewController: UIViewController {
         
         // 2. Observable로 오는 데이터를 받아서 처리하는 방법
         _ = downloadJson(MEMBER_LIST_URL)
-            .subscribe { event in
-                switch event {
-                case .next(let json):
-                    break
-                case .error(let err):
-                    break
-                case .completed:
-                    break
-                }
-        }
-        
-//        downloadJson(MEMBER_LIST_URL)
-//            .debug() // 어떤 데이터가 전달되는지 확인 할 수 있음
-//            .subscribe { event in
-//                switch event {
-//                case .next(let json):
-//                    DispatchQueue.main.async {
-//                        self.editView.text = json
-//                        self.setVisibleWithAnimation(self.activityIndicator, false)
-//                    }
-//                case .error(let error):
-//                    print("DEBUG: Error, ", error.localizedDescription)
-//                case .completed:
-//                    print("Completed.")
-//                }
-//            }
+            .subscribeOn(ConcurrentDispatchQueueScheduler(qos: .default))
+            .map { $0?.uppercased() }
+            .observeOn(MainScheduler.instance) // == DispatchQueue.main.async { }, Sugar API: Operator
+            .subscribe(onNext: { json in
+                self.editView.text = json
+                self.setVisibleWithAnimation(self.activityIndicator, false)
+            })
     }
 }
+
+/*
+ * Operators
+ - observeOn => 다음 줄 부터 영향을 줌.
+ - subscribeOn => 첫째 줄에 영향을 줌, 위치에 상관 없음.
+ - Scan => 누적하면서 다음꺼를 더해서 출력함.
+ */
