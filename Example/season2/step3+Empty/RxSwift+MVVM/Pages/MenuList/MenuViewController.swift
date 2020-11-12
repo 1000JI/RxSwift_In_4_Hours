@@ -86,17 +86,3 @@ class MenuViewController: UIViewController {
         viewModel.onOrder()
     }
 }
-
-//extension MenuViewController: UITableViewDataSource {
-//    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-//        return viewModel.menuObservable
-//    }
-//
-//    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-//        let cell = tableView.dequeueReusableCell(withIdentifier: "MenuItemTableViewCell") as! MenuItemTableViewCell
-//
-//        let menu = viewModel.menus[indexPath.row]
-//
-//        return cell
-//    }
-//}
