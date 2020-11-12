@@ -7,14 +7,24 @@
 //
 
 import UIKit
+import RxSwift
+import RxCocoa
 
 class MenuViewController: UIViewController {
     // MARK: - Life Cycle
     
     let viewModel = MenuListViewModel()
+    var disposeBag = DisposeBag()
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        viewModel.totalPrice
+            .scan(0, accumulator: +) // 초기 값은 0이며 새로 들어온 값이랑 더해서 내려보낼 때 사용
+            .map { $0.currencyKR() }
+            .subscribe(onNext: {
+                self.totalPrice.text = $0
+            })
+            .disposed(by: disposeBag)
     }
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -44,7 +54,9 @@ class MenuViewController: UIViewController {
     @IBAction func onOrder(_ sender: UIButton) {
         // TODO: no selection
         // showAlert("Order Fail", "No Orders")
-        performSegue(withIdentifier: "OrderViewController", sender: nil)
+//        performSegue(withIdentifier: "OrderViewController", sender: nil)
+        
+        viewModel.totalPrice.onNext(100)
     }
 }
 
