@@ -23,21 +23,48 @@ class MenuListViewModel {
     
     init() {
         let menus: [Menu] = [
-            Menu(name: "테스트1", price: 100, count: 0),
-            Menu(name: "테스트2", price: 100, count: 0),
-            Menu(name: "테스트3", price: 100, count: 0),
-            Menu(name: "테스트4", price: 100, count: 0),
-            Menu(name: "테스트5", price: 100, count: 0)
+            Menu(id: 0, name: "테스트1", price: 100, count: 0),
+            Menu(id: 1, name: "테스트2", price: 100, count: 0),
+            Menu(id: 2, name: "테스트3", price: 100, count: 0),
+            Menu(id: 3, name: "테스트4", price: 100, count: 0),
+            Menu(id: 4, name: "테스트5", price: 100, count: 0)
         ]
         
         menuObservable.onNext(menus)
+    }
+    
+    func onOrder() {
+        
     }
     
     func clearAllItemSelections() {
         _ = menuObservable
             .map { menus in
                 return menus.map { m in
-                    Menu(name: m.name, price: m.price, count: 0)
+                    Menu(id: m.id, name: m.name, price: m.price, count: 0)
+                }
+            }
+            .take(1)
+            .subscribe(onNext: {
+                self.menuObservable.onNext($0)
+            })
+    }
+    
+    func changeCount(_ item: Menu, _ increase: Int) {
+        _ = menuObservable
+            .map { menus in
+                return menus.map { m in
+                    if m.id == item.id {
+                        return Menu(id: m.id,
+                             name: m.name,
+                             price: m.price,
+                             count: max(m.count + increase, 0))
+                    } else {
+                        return Menu(id: m.id,
+                             name: m.name,
+                             price: m.price,
+                             count: m.count)
+                    }
                 }
             }
             .take(1)
